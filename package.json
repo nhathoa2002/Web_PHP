@@ -1,47 +1,37 @@
 {
-  "name": "base64-js",
-  "description": "Base64 encoding/decoding in pure JS",
-  "version": "1.5.1",
-  "author": "T. Jameson Little <t.jameson.little@gmail.com>",
-  "typings": "index.d.ts",
+  "name": "safe-buffer",
+  "description": "Safer Node.js Buffer API",
+  "version": "5.1.2",
+  "author": {
+    "name": "Feross Aboukhadijeh",
+    "email": "feross@feross.org",
+    "url": "http://feross.org"
+  },
   "bugs": {
-    "url": "https://github.com/beatgammit/base64-js/issues"
+    "url": "https://github.com/feross/safe-buffer/issues"
   },
   "devDependencies": {
-    "babel-minify": "^0.5.1",
-    "benchmark": "^2.1.4",
-    "browserify": "^16.3.0",
     "standard": "*",
-    "tape": "4.x"
+    "tape": "^4.0.0"
   },
-  "homepage": "https://github.com/beatgammit/base64-js",
+  "homepage": "https://github.com/feross/safe-buffer",
   "keywords": [
-    "base64"
+    "buffer",
+    "buffer allocate",
+    "node security",
+    "safe",
+    "safe-buffer",
+    "security",
+    "uninitialized"
   ],
   "license": "MIT",
   "main": "index.js",
+  "types": "index.d.ts",
   "repository": {
     "type": "git",
-    "url": "git://github.com/beatgammit/base64-js.git"
+    "url": "git://github.com/feross/safe-buffer.git"
   },
   "scripts": {
-    "build": "browserify -s base64js -r ./ | minify > base64js.min.js",
-    "lint": "standard",
-    "test": "npm run lint && npm run unit",
-    "unit": "tape test/*.js"
-  },
-  "funding": [
-    {
-      "type": "github",
-      "url": "https://github.com/sponsors/feross"
-    },
-    {
-      "type": "patreon",
-      "url": "https://www.patreon.com/feross"
-    },
-    {
-      "type": "consulting",
-      "url": "https://feross.org/support"
-    }
-  ]
+    "test": "standard && tape test/*.js"
+  }
 }
