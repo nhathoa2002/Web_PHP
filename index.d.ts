@@ -1,162 +1,78 @@
-// Type definitions for whatwg-url 8.2
-// Project: https://github.com/jsdom/whatwg-url#readme
-// Definitions by: Alexander Marks <https://github.com/aomarks>
-//                 ExE Boss <https://github.com/ExE-Boss>
-// Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
-// Minimum TypeScript Version: 3.6
-
-/// <reference types="node"/>
-
-/** https://url.spec.whatwg.org/#url-representation */
-export interface URLRecord {
-    scheme: string;
-    username: string;
-    password: string;
-    host: string | number | IPv6Address | null;
-    port: number | null;
-    path: string[];
-    query: string | null;
-    fragment: string | null;
-    cannotBeABaseURL?: boolean | undefined;
+/// <reference types="node" />
+import net from 'net';
+import http from 'http';
+import https from 'https';
+import { Duplex } from 'stream';
+import { EventEmitter } from 'events';
+declare function createAgent(opts?: createAgent.AgentOptions): createAgent.Agent;
+declare function createAgent(callback: createAgent.AgentCallback, opts?: createAgent.AgentOptions): createAgent.Agent;
+declare namespace createAgent {
+    interface ClientRequest extends http.ClientRequest {
+        _last?: boolean;
+        _hadError?: boolean;
+        method: string;
+    }
+    interface AgentRequestOptions {
+        host?: string;
+        path?: string;
+        port: number;
+    }
+    interface HttpRequestOptions extends AgentRequestOptions, Omit<http.RequestOptions, keyof AgentRequestOptions> {
+        secureEndpoint: false;
+    }
+    interface HttpsRequestOptions extends AgentRequestOptions, Omit<https.RequestOptions, keyof AgentRequestOptions> {
+        secureEndpoint: true;
+    }
+    type RequestOptions = HttpRequestOptions | HttpsRequestOptions;
+    type AgentLike = Pick<createAgent.Agent, 'addRequest'> | http.Agent;
+    type AgentCallbackReturn = Duplex | AgentLike;
+    type AgentCallbackCallback = (err?: Error | null, socket?: createAgent.AgentCallbackReturn) => void;
+    type AgentCallbackPromise = (req: createAgent.ClientRequest, opts: createAgent.RequestOptions) => createAgent.AgentCallbackReturn | Promise<createAgent.AgentCallbackReturn>;
+    type AgentCallback = typeof Agent.prototype.callback;
+    type AgentOptions = {
+        timeout?: number;
+    };
+    /**
+     * Base `http.Agent` implementation.
+     * No pooling/keep-alive is implemented by default.
+     *
+     * @param {Function} callback
+     * @api public
+     */
+    class Agent extends EventEmitter {
+        timeout: number | null;
+        maxFreeSockets: number;
+        maxTotalSockets: number;
+        maxSockets: number;
+        sockets: {
+            [key: string]: net.Socket[];
+        };
+        freeSockets: {
+            [key: string]: net.Socket[];
+        };
+        requests: {
+            [key: string]: http.IncomingMessage[];
+        };
+        options: https.AgentOptions;
+        private promisifiedCallback?;
+        private explicitDefaultPort?;
+        private explicitProtocol?;
+        constructor(callback?: createAgent.AgentCallback | createAgent.AgentOptions, _opts?: createAgent.AgentOptions);
+        get defaultPort(): number;
+        set defaultPort(v: number);
+        get protocol(): string;
+        set protocol(v: string);
+        callback(req: createAgent.ClientRequest, opts: createAgent.RequestOptions, fn: createAgent.AgentCallbackCallback): void;
+        callback(req: createAgent.ClientRequest, opts: createAgent.RequestOptions): createAgent.AgentCallbackReturn | Promise<createAgent.AgentCallbackReturn>;
+        /**
+         * Called by node-core's "_http_client.js" module when creating
+         * a new HTTP request with this Agent instance.
+         *
+         * @api public
+         */
+        addRequest(req: ClientRequest, _opts: RequestOptions): void;
+        freeSocket(socket: net.Socket, opts: AgentOptions): void;
+        destroy(): void;
+    }
 }
-
-/** https://url.spec.whatwg.org/#concept-ipv6 */
-export type IPv6Address = [number, number, number, number, number, number, number, number];
-
-/** https://url.spec.whatwg.org/#url-class */
-export class URL {
-    constructor(url: string, base?: string | URL);
-
-    get href(): string;
-    set href(V: string);
-
-    get origin(): string;
-
-    get protocol(): string;
-    set protocol(V: string);
-
-    get username(): string;
-    set username(V: string);
-
-    get password(): string;
-    set password(V: string);
-
-    get host(): string;
-    set host(V: string);
-
-    get hostname(): string;
-    set hostname(V: string);
-
-    get port(): string;
-    set port(V: string);
-
-    get pathname(): string;
-    set pathname(V: string);
-
-    get search(): string;
-    set search(V: string);
-
-    get searchParams(): URLSearchParams;
-
-    get hash(): string;
-    set hash(V: string);
-
-    toJSON(): string;
-
-    readonly [Symbol.toStringTag]: "URL";
-}
-
-/** https://url.spec.whatwg.org/#interface-urlsearchparams */
-export class URLSearchParams {
-    constructor(
-        init?:
-            | ReadonlyArray<readonly [name: string, value: string]>
-            | Iterable<readonly [name: string, value: string]>
-            | { readonly [name: string]: string }
-            | string,
-    );
-
-    append(name: string, value: string): void;
-    delete(name: string): void;
-    get(name: string): string | null;
-    getAll(name: string): string[];
-    has(name: string): boolean;
-    set(name: string, value: string): void;
-    sort(): void;
-
-    keys(): IterableIterator<string>;
-    values(): IterableIterator<string>;
-    entries(): IterableIterator<[name: string, value: string]>;
-    forEach<THIS_ARG = void>(
-        callback: (this: THIS_ARG, value: string, name: string, searchParams: this) => void,
-        thisArg?: THIS_ARG,
-    ): void;
-
-    readonly [Symbol.toStringTag]: "URLSearchParams";
-    [Symbol.iterator](): IterableIterator<[name: string, value: string]>;
-}
-
-/** https://url.spec.whatwg.org/#concept-url-parser */
-export function parseURL(
-    input: string,
-    options?: { readonly baseURL?: string | undefined; readonly encodingOverride?: string | undefined },
-): URLRecord | null;
-
-/** https://url.spec.whatwg.org/#concept-basic-url-parser */
-export function basicURLParse(
-    input: string,
-    options?: {
-        baseURL?: string | undefined;
-        encodingOverride?: string | undefined;
-        url?: URLRecord | undefined;
-        stateOverride?: StateOverride | undefined;
-    },
-): URLRecord | null;
-
-/** https://url.spec.whatwg.org/#scheme-start-state */
-export type StateOverride =
-    | "scheme start"
-    | "scheme"
-    | "no scheme"
-    | "special relative or authority"
-    | "path or authority"
-    | "relative"
-    | "relative slash"
-    | "special authority slashes"
-    | "special authority ignore slashes"
-    | "authority"
-    | "host"
-    | "hostname"
-    | "port"
-    | "file"
-    | "file slash"
-    | "file host"
-    | "path start"
-    | "path"
-    | "cannot-be-a-base-URL path"
-    | "query"
-    | "fragment";
-
-/** https://url.spec.whatwg.org/#concept-url-serializer */
-export function serializeURL(urlRecord: URLRecord, excludeFragment?: boolean): string;
-
-/** https://url.spec.whatwg.org/#concept-host-serializer */
-export function serializeHost(host: string | number | IPv6Address): string;
-
-/** https://url.spec.whatwg.org/#serialize-an-integer */
-export function serializeInteger(number: number): string;
-
-/** https://html.spec.whatwg.org#ascii-serialisation-of-an-origin */
-export function serializeURLOrigin(urlRecord: URLRecord): string;
-
-/** https://url.spec.whatwg.org/#set-the-username */
-export function setTheUsername(urlRecord: URLRecord, username: string): void;
-
-/** https://url.spec.whatwg.org/#set-the-password */
-export function setThePassword(urlRecord: URLRecord, password: string): void;
-
-/** https://url.spec.whatwg.org/#cannot-have-a-username-password-port */
-export function cannotHaveAUsernamePasswordPort(urlRecord: URLRecord): boolean;
-
-/** https://url.spec.whatwg.org/#percent-decode */
-export function percentDecode(buffer: Extract<NodeJS.TypedArray, ArrayLike<number>>): Buffer;
+export = createAgent;
