@@ -1,37 +1,41 @@
 {
-  "name": "safe-buffer",
-  "description": "Safer Node.js Buffer API",
-  "version": "5.1.2",
-  "author": {
-    "name": "Feross Aboukhadijeh",
-    "email": "feross@feross.org",
-    "url": "http://feross.org"
-  },
-  "bugs": {
-    "url": "https://github.com/feross/safe-buffer/issues"
+  "name": "basic-auth",
+  "description": "node.js basic auth parser",
+  "version": "2.0.1",
+  "license": "MIT",
+  "keywords": [
+    "basic",
+    "auth",
+    "authorization",
+    "basicauth"
+  ],
+  "repository": "jshttp/basic-auth",
+  "dependencies": {
+    "safe-buffer": "5.1.2"
   },
   "devDependencies": {
-    "standard": "*",
-    "tape": "^4.0.0"
+    "eslint": "5.6.0",
+    "eslint-config-standard": "12.0.0",
+    "eslint-plugin-import": "2.14.0",
+    "eslint-plugin-markdown": "1.0.0-beta.6",
+    "eslint-plugin-node": "7.0.1",
+    "eslint-plugin-promise": "4.0.1",
+    "eslint-plugin-standard": "4.0.0",
+    "istanbul": "0.4.5",
+    "mocha": "5.2.0"
   },
-  "homepage": "https://github.com/feross/safe-buffer",
-  "keywords": [
-    "buffer",
-    "buffer allocate",
-    "node security",
-    "safe",
-    "safe-buffer",
-    "security",
-    "uninitialized"
+  "files": [
+    "HISTORY.md",
+    "LICENSE",
+    "index.js"
   ],
-  "license": "MIT",
-  "main": "index.js",
-  "types": "index.d.ts",
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/feross/safe-buffer.git"
+  "engines": {
+    "node": ">= 0.8"
   },
   "scripts": {
-    "test": "standard && tape test/*.js"
+    "lint": "eslint --plugin markdown --ext js,md .",
+    "test": "mocha --check-leaks --reporter spec --bail",
+    "test-cov": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter dot --check-leaks test/",
+    "test-travis": "istanbul cover node_modules/mocha/bin/_mocha --report lcovonly -- --reporter spec --check-leaks test/"
   }
 }
