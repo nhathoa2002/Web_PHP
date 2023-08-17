@@ -1,145 +1,87 @@
-agent-base
-==========
-### Turn a function into an [`http.Agent`][http.Agent] instance
-[![Build Status](https://github.com/TooTallNate/node-agent-base/workflows/Node%20CI/badge.svg)](https://github.com/TooTallNate/node-agent-base/actions?workflow=Node+CI)
+anymatch [![Build Status](https://travis-ci.org/micromatch/anymatch.svg?branch=master)](https://travis-ci.org/micromatch/anymatch) [![Coverage Status](https://img.shields.io/coveralls/micromatch/anymatch.svg?branch=master)](https://coveralls.io/r/micromatch/anymatch?branch=master)
+======
+Javascript module to match a string against a regular expression, glob, string,
+or function that takes the string as an argument and returns a truthy or falsy
+value. The matcher can also be an array of any or all of these. Useful for
+allowing a very flexible user-defined config to define things like file paths.
 
-This module provides an `http.Agent` generator. That is, you pass it an async
-callback function, and it returns a new `http.Agent` instance that will invoke the
-given callback function when sending outbound HTTP requests.
-
-#### Some subclasses:
-
-Here's some more interesting uses of `agent-base`.
-Send a pull request to list yours!
-
- * [`http-proxy-agent`][http-proxy-agent]: An HTTP(s) proxy `http.Agent` implementation for HTTP endpoints
- * [`https-proxy-agent`][https-proxy-agent]: An HTTP(s) proxy `http.Agent` implementation for HTTPS endpoints
- * [`pac-proxy-agent`][pac-proxy-agent]: A PAC file proxy `http.Agent` implementation for HTTP and HTTPS
- * [`socks-proxy-agent`][socks-proxy-agent]: A SOCKS proxy `http.Agent` implementation for HTTP and HTTPS
+__Note: This module has Bash-parity, please be aware that Windows-style backslashes are not supported as separators. See https://github.com/micromatch/micromatch#backslashes for more information.__
 
 
-Installation
-------------
-
-Install with `npm`:
-
-``` bash
-$ npm install agent-base
+Usage
+-----
+```sh
+npm install anymatch
 ```
 
-
-Example
--------
-
-Here's a minimal example that creates a new `net.Socket` connection to the server
-for every HTTP request (i.e. the equivalent of `agent: false` option):
+#### anymatch(matchers, testString, [returnIndex], [options])
+* __matchers__: (_Array|String|RegExp|Function_)
+String to be directly matched, string with glob patterns, regular expression
+test, function that takes the testString as an argument and returns a truthy
+value if it should be matched, or an array of any number and mix of these types.
+* __testString__: (_String|Array_) The string to test against the matchers. If
+passed as an array, the first element of the array will be used as the
+`testString` for non-function matchers, while the entire array will be applied
+as the arguments for function matchers.
+* __options__: (_Object_ [optional]_) Any of the [picomatch](https://github.com/micromatch/picomatch#options) options.
+    * __returnIndex__: (_Boolean [optional]_) If true, return the array index of
+the first matcher that that testString matched, or -1 if no match, instead of a
+boolean result.
 
 ```js
-var net = require('net');
-var tls = require('tls');
-var url = require('url');
-var http = require('http');
-var agent = require('agent-base');
+const anymatch = require('anymatch');
 
-var endpoint = 'http://nodejs.org/api/';
-var parsed = url.parse(endpoint);
+const matchers = [ 'path/to/file.js', 'path/anyjs/**/*.js', /foo.js$/, string => string.includes('bar') && string.length > 10 ] ;
 
-// This is the important part!
-parsed.agent = agent(function (req, opts) {
-  var socket;
-  // `secureEndpoint` is true when using the https module
-  if (opts.secureEndpoint) {
-    socket = tls.connect(opts);
-  } else {
-    socket = net.connect(opts);
-  }
-  return socket;
-});
+anymatch(matchers, 'path/to/file.js'); // true
+anymatch(matchers, 'path/anyjs/baz.js'); // true
+anymatch(matchers, 'path/to/foo.js'); // true
+anymatch(matchers, 'path/to/bar.js'); // true
+anymatch(matchers, 'bar.js'); // false
 
-// Everything else works just like normal...
-http.get(parsed, function (res) {
-  console.log('"response" event!', res.headers);
-  res.pipe(process.stdout);
-});
+// returnIndex = true
+anymatch(matchers, 'foo.js', {returnIndex: true}); // 2
+anymatch(matchers, 'path/anyjs/foo.js', {returnIndex: true}); // 1
+
+// any picomatc
+
+// using globs to match directories and their children
+anymatch('node_modules', 'node_modules'); // true
+anymatch('node_modules', 'node_modules/somelib/index.js'); // false
+anymatch('node_modules/**', 'node_modules/somelib/index.js'); // true
+anymatch('node_modules/**', '/absolute/path/to/node_modules/somelib/index.js'); // false
+anymatch('**/node_modules/**', '/absolute/path/to/node_modules/somelib/index.js'); // true
+
+const matcher = anymatch(matchers);
+['foo.js', 'bar.js'].filter(matcher);  // [ 'foo.js' ]
+anymatch master* ❯
+
 ```
 
-Returning a Promise or using an `async` function is also supported:
+#### anymatch(matchers)
+You can also pass in only your matcher(s) to get a curried function that has
+already been bound to the provided matching criteria. This can be used as an
+`Array#filter` callback.
 
 ```js
-agent(async function (req, opts) {
-  await sleep(1000);
-  // etc…
-});
+var matcher = anymatch(matchers);
+
+matcher('path/to/file.js'); // true
+matcher('path/anyjs/baz.js', true); // 1
+
+['foo.js', 'bar.js'].filter(matcher); // ['foo.js']
 ```
 
-Return another `http.Agent` instance to "pass through" the responsibility
-for that HTTP request to that agent:
+Changelog
+----------
+[See release notes page on GitHub](https://github.com/micromatch/anymatch/releases)
 
-```js
-agent(function (req, opts) {
-  return opts.secureEndpoint ? https.globalAgent : http.globalAgent;
-});
-```
-
-
-API
----
-
-## Agent(Function callback[, Object options]) → [http.Agent][]
-
-Creates a base `http.Agent` that will execute the callback function `callback`
-for every HTTP request that it is used as the `agent` for. The callback function
-is responsible for creating a `stream.Duplex` instance of some kind that will be
-used as the underlying socket in the HTTP request.
-
-The `options` object accepts the following properties:
-
-  * `timeout` - Number - Timeout for the `callback()` function in milliseconds. Defaults to Infinity (optional).
-
-The callback function should have the following signature:
-
-### callback(http.ClientRequest req, Object options, Function cb) → undefined
-
-The ClientRequest `req` can be accessed to read request headers and
-and the path, etc. The `options` object contains the options passed
-to the `http.request()`/`https.request()` function call, and is formatted
-to be directly passed to `net.connect()`/`tls.connect()`, or however
-else you want a Socket to be created. Pass the created socket to
-the callback function `cb` once created, and the HTTP request will
-continue to proceed.
-
-If the `https` module is used to invoke the HTTP request, then the
-`secureEndpoint` property on `options` _will be set to `true`_.
-
+- **v3.0:** Removed `startIndex` and `endIndex` arguments. Node 8.x-only.
+- **v2.0:** [micromatch](https://github.com/jonschlinkert/micromatch) moves away from minimatch-parity and inline with Bash. This includes handling backslashes differently (see https://github.com/micromatch/micromatch#backslashes for more information).
+- **v1.2:** anymatch uses [micromatch](https://github.com/jonschlinkert/micromatch)
+for glob pattern matching. Issues with glob pattern matching should be
+reported directly to the [micromatch issue tracker](https://github.com/jonschlinkert/micromatch/issues).
 
 License
 -------
-
-(The MIT License)
-
-Copyright (c) 2013 Nathan Rajlich &lt;nathan@tootallnate.net&gt;
-
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of this software and associated documentation files (the
-'Software'), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-[http-proxy-agent]: https://github.com/TooTallNate/node-http-proxy-agent
-[https-proxy-agent]: https://github.com/TooTallNate/node-https-proxy-agent
-[pac-proxy-agent]: https://github.com/TooTallNate/node-pac-proxy-agent
-[socks-proxy-agent]: https://github.com/TooTallNate/node-socks-proxy-agent
-[http.Agent]: https://nodejs.org/api/http.html#http_class_http_agent
+[ISC](https://raw.github.com/micromatch/anymatch/master/LICENSE)

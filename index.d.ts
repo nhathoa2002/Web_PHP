@@ -1,37 +1,19 @@
-declare namespace ansiRegex {
-	interface Options {
-		/**
-		Match only the first ANSI escape.
-
-		@default false
-		*/
-		onlyFirst: boolean;
-	}
+type AnymatchFn = (testString: string) => boolean;
+type AnymatchPattern = string|RegExp|AnymatchFn;
+type AnymatchMatcher = AnymatchPattern|AnymatchPattern[]
+type AnymatchTester = {
+  (testString: string|any[], returnIndex: true): number;
+  (testString: string|any[]): boolean;
 }
 
-/**
-Regular expression for matching ANSI escape codes.
+type PicomatchOptions = {dot: boolean};
 
-@example
-```
-import ansiRegex = require('ansi-regex');
+declare const anymatch: {
+  (matchers: AnymatchMatcher): AnymatchTester;
+  (matchers: AnymatchMatcher, testString: string|any[], returnIndex: true | PicomatchOptions): number;
+  (matchers: AnymatchMatcher, testString: string|any[]): boolean;
+}
 
-ansiRegex().test('\u001B[4mcake\u001B[0m');
-//=> true
-
-ansiRegex().test('cake');
-//=> false
-
-'\u001B[4mcake\u001B[0m'.match(ansiRegex());
-//=> ['\u001B[4m', '\u001B[0m']
-
-'\u001B[4mcake\u001B[0m'.match(ansiRegex({onlyFirst: true}));
-//=> ['\u001B[4m']
-
-'\u001B]8;;https://github.com\u0007click\u001B]8;;\u0007'.match(ansiRegex());
-//=> ['\u001B]8;;https://github.com\u0007', '\u001B]8;;\u0007']
-```
-*/
-declare function ansiRegex(options?: ansiRegex.Options): RegExp;
-
-export = ansiRegex;
+export {AnymatchMatcher as Matcher}
+export {AnymatchTester as Tester}
+export default anymatch
