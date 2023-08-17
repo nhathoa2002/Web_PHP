@@ -1,44 +1,94 @@
-# `append-field`
+aproba
+======
 
-A [W3C HTML JSON forms spec](http://www.w3.org/TR/html-json-forms/) compliant
-field appender (for lack of a better name). Useful for people implementing
-`application/x-www-form-urlencoded` and `multipart/form-data` parsers.
+A ridiculously light-weight function argument validator
 
-It works best on objects created with `Object.create(null)`. Otherwise it might
-conflict with variables from the prototype (e.g. `hasOwnProperty`).
+```
+var validate = require("aproba")
 
-## Installation
+function myfunc(a, b, c) {
+  // `a` must be a string, `b` a number, `c` a function
+  validate('SNF', arguments) // [a,b,c] is also valid
+}
 
-```sh
-npm install --save append-field
+myfunc('test', 23, function () {}) // ok
+myfunc(123, 23, function () {}) // type error
+myfunc('test', 23) // missing arg error
+myfunc('test', 23, function () {}, true) // too many args error
+
 ```
 
-## Usage
+Valid types are:
 
-```javascript
-var appendField = require('append-field')
-var obj = Object.create(null)
+| type | description
+| :--: | :----------
+| *    | matches any type
+| A    | `Array.isArray` OR an `arguments` object
+| S    | typeof == string
+| N    | typeof == number
+| F    | typeof == function
+| O    | typeof == object and not type A and not type E
+| B    | typeof == boolean
+| E    | `instanceof Error` OR `null` **(special: see below)**
+| Z    | == `null`
 
-appendField(obj, 'pets[0][species]', 'Dahut')
-appendField(obj, 'pets[0][name]', 'Hypatia')
-appendField(obj, 'pets[1][species]', 'Felis Stultus')
-appendField(obj, 'pets[1][name]', 'Billie')
+Validation failures throw one of three exception types, distinguished by a
+`code` property of `EMISSINGARG`, `EINVALIDTYPE` or `ETOOMANYARGS`.
 
-console.log(obj)
+If you pass in an invalid type then it will throw with a code of
+`EUNKNOWNTYPE`.
+
+If an **error** argument is found and is not null then the remaining
+arguments are optional.  That is, if you say `ESO` then that's like using a
+non-magical `E` in: `E|ESO|ZSO`.
+
+### But I have optional arguments?!
+
+You can provide more than one signature by separating them with pipes `|`.
+If any signature matches the arguments then they'll be considered valid.
+
+So for example, say you wanted to write a signature for
+`fs.createWriteStream`.  The docs for it describe it thusly:
+
+```
+fs.createWriteStream(path[, options])
 ```
 
-```text
-{ pets:
-   [ { species: 'Dahut', name: 'Hypatia' },
-     { species: 'Felis Stultus', name: 'Billie' } ] }
+This would be a signature of `SO|S`.  That is, a string and and object, or
+just a string.
+
+Now, if you read the full `fs` docs, you'll see that actually path can ALSO
+be a buffer.  And options can be a string, that is:
+```
+path <String> | <Buffer>
+options <String> | <Object>
 ```
 
-## API
+To reproduce this you have to fully enumerate all of the possible
+combinations and that implies a signature of `SO|SS|OO|OS|S|O`.  The
+awkwardness is a feature: It reminds you of the complexity you're adding to
+your API when you do this sort of thing.
 
-### `appendField(store, key, value)`
 
-Adds the field named `key` with the value `value` to the object `store`.
+### Browser support
 
-## License
+This has no dependencies and should work in browsers, though you'll have
+noisier stack traces.
 
-MIT
+### Why this exists
+
+I wanted a very simple argument validator. It needed to do two things:
+
+1. Be more concise and easier to use than assertions
+
+2. Not encourage an infinite bikeshed of DSLs
+
+This is why types are specified by a single character and there's no such
+thing as an optional argument. 
+
+This is not intended to validate user data. This is specifically about
+asserting the interface of your functions.
+
+If you need greater validation, I encourage you to write them by hand or
+look elsewhere.
+

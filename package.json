@@ -1,19 +1,35 @@
 {
-  "name": "append-field",
-  "version": "1.0.0",
-  "license": "MIT",
-  "author": "Linus Unnebäck <linus@folkdatorn.se>",
+  "name": "aproba",
+  "version": "2.0.0",
+  "description": "A ridiculously light-weight argument validator (now browser friendly)",
   "main": "index.js",
-  "devDependencies": {
-    "mocha": "^2.2.4",
-    "standard": "^6.0.5",
-    "testdata-w3c-json-form": "^0.2.0"
+  "directories": {
+    "test": "test"
   },
+  "dependencies": {},
+  "devDependencies": {
+    "standard": "^11.0.1",
+    "tap": "^12.0.1"
+  },
+  "files": [
+    "index.js"
+  ],
   "scripts": {
-    "test": "standard && mocha"
+    "pretest": "standard",
+    "test": "tap --100 -J test/*.js"
   },
   "repository": {
     "type": "git",
-    "url": "http://github.com/LinusU/node-append-field.git"
-  }
+    "url": "https://github.com/iarna/aproba"
+  },
+  "keywords": [
+    "argument",
+    "validate"
+  ],
+  "author": "Rebecca Turner <me@re-becca.org>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/iarna/aproba/issues"
+  },
+  "homepage": "https://github.com/iarna/aproba"
 }
