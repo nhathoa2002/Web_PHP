@@ -1,103 +1,162 @@
-// Type definitions for webidl-conversions 6.1
-// Project: https://github.com/jsdom/webidl-conversions#readme
-// Definitions by: ExE Boss <https://github.com/ExE-Boss>
+// Type definitions for whatwg-url 8.2
+// Project: https://github.com/jsdom/whatwg-url#readme
+// Definitions by: Alexander Marks <https://github.com/aomarks>
+//                 ExE Boss <https://github.com/ExE-Boss>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
-// TypeScript Version: 3.0
+// Minimum TypeScript Version: 3.6
 
-type Parameters<T extends (...args: any[]) => any> = T extends (...args: infer P) => any ? P : never;
+/// <reference types="node"/>
 
-declare namespace WebIDLConversions {
-    interface Globals {
-        [key: string]: any;
-
-        Number: (value?: any) => number;
-        String: (value?: any) => string;
-        TypeError: new (message?: string) => TypeError;
-    }
-
-    interface Options {
-        context?: string | undefined;
-        globals?: Globals | undefined;
-    }
-
-    interface IntegerOptions extends Options {
-        enforceRange?: boolean | undefined;
-        clamp?: boolean | undefined;
-    }
-
-    interface StringOptions extends Options {
-        treatNullAsEmptyString?: boolean | undefined;
-    }
-
-    interface BufferSourceOptions extends Options {
-        allowShared?: boolean | undefined;
-    }
-
-    type IntegerConversion = (V: any, opts?: IntegerOptions) => number;
-    type StringConversion = (V: any, opts?: StringOptions) => string;
-    type NumberConversion = (V: any, opts?: Options) => number;
+/** https://url.spec.whatwg.org/#url-representation */
+export interface URLRecord {
+    scheme: string;
+    username: string;
+    password: string;
+    host: string | number | IPv6Address | null;
+    port: number | null;
+    path: string[];
+    query: string | null;
+    fragment: string | null;
+    cannotBeABaseURL?: boolean | undefined;
 }
 
-declare const WebIDLConversions: {
-    any<V>(V: V, opts?: WebIDLConversions.Options): V;
-    void(V?: any, opts?: WebIDLConversions.Options): void;
-    boolean(V: any, opts?: WebIDLConversions.Options): boolean;
+/** https://url.spec.whatwg.org/#concept-ipv6 */
+export type IPv6Address = [number, number, number, number, number, number, number, number];
 
-    byte(V: any, opts?: WebIDLConversions.IntegerOptions): number;
-    octet(V: any, opts?: WebIDLConversions.IntegerOptions): number;
+/** https://url.spec.whatwg.org/#url-class */
+export class URL {
+    constructor(url: string, base?: string | URL);
 
-    short(V: any, opts?: WebIDLConversions.IntegerOptions): number;
-    ['unsigned short'](V: any, opts?: WebIDLConversions.IntegerOptions): number;
+    get href(): string;
+    set href(V: string);
 
-    long(V: any, opts?: WebIDLConversions.IntegerOptions): number;
-    ['unsigned long'](V: any, opts?: WebIDLConversions.IntegerOptions): number;
+    get origin(): string;
 
-    ['long long'](V: any, opts?: WebIDLConversions.IntegerOptions): number;
-    ['unsigned long long'](V: any, opts?: WebIDLConversions.IntegerOptions): number;
+    get protocol(): string;
+    set protocol(V: string);
 
-    double(V: any, opts?: WebIDLConversions.Options): number;
-    ['unrestricted double'](V: any, opts?: WebIDLConversions.Options): number;
+    get username(): string;
+    set username(V: string);
 
-    float(V: any, opts?: WebIDLConversions.Options): number;
-    ['unrestricted float'](V: any, opts?: WebIDLConversions.Options): number;
+    get password(): string;
+    set password(V: string);
 
-    DOMString(V: any, opts?: WebIDLConversions.StringOptions): string;
-    ByteString(V: any, opts?: WebIDLConversions.StringOptions): string;
-    USVString(V: any, opts?: WebIDLConversions.StringOptions): string;
+    get host(): string;
+    set host(V: string);
 
-    object<V>(V: V, opts?: WebIDLConversions.Options): V extends object ? V : V & object;
-    ArrayBuffer(V: any, opts?: WebIDLConversions.BufferSourceOptions & { allowShared?: false | undefined }): ArrayBuffer;
-    ArrayBuffer(V: any, opts?: WebIDLConversions.BufferSourceOptions): ArrayBufferLike;
-    DataView(V: any, opts?: WebIDLConversions.BufferSourceOptions): DataView;
+    get hostname(): string;
+    set hostname(V: string);
 
-    Int8Array(V: any, opts?: WebIDLConversions.BufferSourceOptions): Int8Array;
-    Int16Array(V: any, opts?: WebIDLConversions.BufferSourceOptions): Int16Array;
-    Int32Array(V: any, opts?: WebIDLConversions.BufferSourceOptions): Int32Array;
+    get port(): string;
+    set port(V: string);
 
-    Uint8Array(V: any, opts?: WebIDLConversions.BufferSourceOptions): Uint8Array;
-    Uint16Array(V: any, opts?: WebIDLConversions.BufferSourceOptions): Uint16Array;
-    Uint32Array(V: any, opts?: WebIDLConversions.BufferSourceOptions): Uint32Array;
-    Uint8ClampedArray(V: any, opts?: WebIDLConversions.BufferSourceOptions): Uint8ClampedArray;
+    get pathname(): string;
+    set pathname(V: string);
 
-    Float32Array(V: any, opts?: WebIDLConversions.BufferSourceOptions): Float32Array;
-    Float64Array(V: any, opts?: WebIDLConversions.BufferSourceOptions): Float64Array;
+    get search(): string;
+    set search(V: string);
 
-    ArrayBufferView(V: any, opts?: WebIDLConversions.BufferSourceOptions): ArrayBufferView;
-    BufferSource(V: any, opts?: WebIDLConversions.BufferSourceOptions & { allowShared?: false | undefined }): ArrayBuffer | ArrayBufferView;
-    BufferSource(V: any, opts?: WebIDLConversions.BufferSourceOptions): ArrayBufferLike | ArrayBufferView;
+    get searchParams(): URLSearchParams;
 
-    DOMTimeStamp(V: any, opts?: WebIDLConversions.Options): number;
+    get hash(): string;
+    set hash(V: string);
 
-    // tslint:disable:ban-types
-    /** @deprecated Will be removed in v7.0 */
-    Function<V>(V: V, opts?: WebIDLConversions.Options): V extends (...args: any[]) => any ? V : Function;
+    toJSON(): string;
 
-    /** @deprecated Will be removed in v7.0 */
-    VoidFunction<V>(
-        V: V,
-        opts?: WebIDLConversions.Options,
-    ): V extends (...args: any[]) => any ? (...args: Parameters<V>) => void : Function;
-};
+    readonly [Symbol.toStringTag]: "URL";
+}
 
-// This can't use ES6 style exports, as those can't have spaces in export names.
-export = WebIDLConversions;
+/** https://url.spec.whatwg.org/#interface-urlsearchparams */
+export class URLSearchParams {
+    constructor(
+        init?:
+            | ReadonlyArray<readonly [name: string, value: string]>
+            | Iterable<readonly [name: string, value: string]>
+            | { readonly [name: string]: string }
+            | string,
+    );
+
+    append(name: string, value: string): void;
+    delete(name: string): void;
+    get(name: string): string | null;
+    getAll(name: string): string[];
+    has(name: string): boolean;
+    set(name: string, value: string): void;
+    sort(): void;
+
+    keys(): IterableIterator<string>;
+    values(): IterableIterator<string>;
+    entries(): IterableIterator<[name: string, value: string]>;
+    forEach<THIS_ARG = void>(
+        callback: (this: THIS_ARG, value: string, name: string, searchParams: this) => void,
+        thisArg?: THIS_ARG,
+    ): void;
+
+    readonly [Symbol.toStringTag]: "URLSearchParams";
+    [Symbol.iterator](): IterableIterator<[name: string, value: string]>;
+}
+
+/** https://url.spec.whatwg.org/#concept-url-parser */
+export function parseURL(
+    input: string,
+    options?: { readonly baseURL?: string | undefined; readonly encodingOverride?: string | undefined },
+): URLRecord | null;
+
+/** https://url.spec.whatwg.org/#concept-basic-url-parser */
+export function basicURLParse(
+    input: string,
+    options?: {
+        baseURL?: string | undefined;
+        encodingOverride?: string | undefined;
+        url?: URLRecord | undefined;
+        stateOverride?: StateOverride | undefined;
+    },
+): URLRecord | null;
+
+/** https://url.spec.whatwg.org/#scheme-start-state */
+export type StateOverride =
+    | "scheme start"
+    | "scheme"
+    | "no scheme"
+    | "special relative or authority"
+    | "path or authority"
+    | "relative"
+    | "relative slash"
+    | "special authority slashes"
+    | "special authority ignore slashes"
+    | "authority"
+    | "host"
+    | "hostname"
+    | "port"
+    | "file"
+    | "file slash"
+    | "file host"
+    | "path start"
+    | "path"
+    | "cannot-be-a-base-URL path"
+    | "query"
+    | "fragment";
+
+/** https://url.spec.whatwg.org/#concept-url-serializer */
+export function serializeURL(urlRecord: URLRecord, excludeFragment?: boolean): string;
+
+/** https://url.spec.whatwg.org/#concept-host-serializer */
+export function serializeHost(host: string | number | IPv6Address): string;
+
+/** https://url.spec.whatwg.org/#serialize-an-integer */
+export function serializeInteger(number: number): string;
+
+/** https://html.spec.whatwg.org#ascii-serialisation-of-an-origin */
+export function serializeURLOrigin(urlRecord: URLRecord): string;
+
+/** https://url.spec.whatwg.org/#set-the-username */
+export function setTheUsername(urlRecord: URLRecord, username: string): void;
+
+/** https://url.spec.whatwg.org/#set-the-password */
+export function setThePassword(urlRecord: URLRecord, password: string): void;
+
+/** https://url.spec.whatwg.org/#cannot-have-a-username-password-port */
+export function cannotHaveAUsernamePasswordPort(urlRecord: URLRecord): boolean;
+
+/** https://url.spec.whatwg.org/#percent-decode */
+export function percentDecode(buffer: Extract<NodeJS.TypedArray, ArrayLike<number>>): Buffer;
